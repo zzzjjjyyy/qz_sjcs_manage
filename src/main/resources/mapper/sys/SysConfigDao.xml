@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chuangyun.modules.sys.dao.SysConfigDao">
+    <select id="queryObject" resultType="com.chuangyun.modules.sys.entity.SysConfigEntity">
+		select * from sys_config where id = #{id}
+	</select>
+
+    <select id="queryList" parameterType="map" resultType="com.chuangyun.modules.sys.entity.SysConfigEntity">
+        SELECT * from (
+            SELECT *,row_number() over(
+            <choose>
+                <when test="sidx != null and sidx.trim() != ''">
+                    order by [${sidx}] ${order}
+                </when>
+                <otherwise>
+                    order by [id] asc
+                </otherwise>
+            </choose>
+            ) row from sys_config
+            WHERE 1 = 1
+            <if test="key != null and key.trim() != ''">
+                and [key] like ('%' + #{key} + '%')
+            </if>
+        ) t1 WHERE status = 1
+        <if test="offset != null and limit != null">
+            and t1.row BETWEEN #{offset} AND #{maxrow}
+        </if>
+    </select>
+
+    <select id="queryTotal" parameterType="map" resultType="int">
+        select count(*) from sys_config where status = 1
+        <if test="key != null and key.trim() != ''">
+            and [key] like ('%' + #{key} + '%')
+        </if>
+    </select>
+
+    <insert id="save" parameterType="com.chuangyun.modules.sys.entity.SysConfigEntity">
+		insert into sys_config([key], value, remark)
+			values(#{key},#{value},#{remark})
+	</insert>
+
+    <update id="update" parameterType="com.chuangyun.modules.sys.entity.SysConfigEntity">
+		update sys_config set [key] = #{key}, value = #{value}, remark = #{remark}
+			 where id = #{id}
+	</update>
+
+    <!-- 根据key，更新value -->
+    <update id="updateValueByKey" parameterType="map">
+		update sys_config set value = #{value} where [key] = #{key}
+	</update>
+
+    <!-- 根据key，查询value -->
+    <select id="queryByKey" parameterType="string" resultType="com.chuangyun.modules.sys.entity.SysConfigEntity">
+		select * from sys_config where [key] = #{key}
+	</select>
+
+    <delete id="deleteBatch" parameterType="int">
+        delete from sys_config where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+</mapper>

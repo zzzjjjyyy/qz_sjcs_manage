@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chuangyun.modules.sys.dao.SysDeptDao">
+    <select id="queryObject" resultType="com.chuangyun.modules.sys.entity.SysDeptEntity">
+		select * from sys_dept where dept_id = #{value}
+	</select>
+
+    <select id="queryList" resultType="com.chuangyun.modules.sys.entity.SysDeptEntity">
+        select m.*,(select p.fullname from sys_dept p where p.dept_id = m.parent_id) as parentName
+        from sys_dept m
+        <where>
+            1 = 1
+            <if test="deptId != null">
+                AND FIND_IN_SET(dept_id, getChildrenDept(#{deptId}))
+            </if>
+            <choose>
+                <when test="sidx != null and sidx.trim() != ''">
+                    order by m.${sidx} ${order}
+                </when>
+                <otherwise>
+                    order by m.dept_id,m.parent_id asc
+                </otherwise>
+            </choose>
+            <if test="offset != null and limit != null">
+                limit #{offset}, #{limit}
+            </if>
+        </where>
+    </select>
+    <select id="queryDeptListParentId" resultType="com.chuangyun.modules.sys.entity.SysDeptEntity">
+		select * from sys_dept where parent_id = #{deptId} order by dept_id asc
+	</select>
+
+    <insert id="save" parameterType="com.chuangyun.modules.sys.entity.SysDeptEntity">
+		insert into sys_dept
+		(
+		parent_id,
+		simplename,
+		fullname
+		)
+		values
+		(
+		#{parentId},
+		#{simpleName},
+		#{fullName}
+		)
+	</insert>
+
+    <update id="update" parameterType="com.chuangyun.modules.sys.entity.SysDeptEntity">
+        update sys_dept
+        <set>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="simpleName != null">simplename = #{simpleName},</if>
+            <if test="fullName != null">fullname = #{fullName}</if>
+        </set>
+        where dept_id = #{deptId}
+    </update>
+
+    <delete id="deleteBatch">
+        delete from sys_dept where dept_id in
+        <foreach item="deptId" collection="array" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+    </delete>
+</mapper>
